@@ -1,3 +1,6 @@
+---
+sort: 1
+---
 # GCC编译流程
 
 <!-- {% include list.liquid %} -->
