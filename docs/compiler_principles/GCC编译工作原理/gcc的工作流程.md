@@ -1,0 +1,149 @@
+# 从C/C++源码到可执行程序
+
+## C/C++经历了什么
+
+- 编译的流程
+
+```mermaid
+flowchart LR;
+A((开始编译))--源代码-->预处理器--预处理后源代码-->编译器--汇编代码-->汇编器--二进制目标文件-->链接器-->B((可执行文件))
+```
+
+* 编译命令
+  helloworld.c
+
+  ```
+  #include <stdio.h>
+
+  int main()
+  {
+      printf("Hello world!\r\n");
+      return 0;
+  }
+  ```
+
+  使用gcc编译目标文件:
+  `gcc helloworld.c -o helloworld`
+  其实在这个命令背后涉及预处理，编译，汇编，链接。我们开源加上--verbose把编译过程打印出来
+
+  ```
+  gcc helloworld.c -o helloworld --verbose
+  输出信息如下（我简化了下）
+  $cc1 -quiet helloworld.c -o helloworld.s   //编译
+  $as -o helloworld.o  helloworld.s          //汇编
+  $collect2 -o helloworld  \                 //链接
+      crtl.o crti.o crtendS.o helloworld.o
+  ```
+
+## GCC编译各个过程
+
+### gcc命令选项
+
+* gcc --help我们可以得到帮助信息。我们重点看如下信息
+
+```
+ -B <directory>           Add <directory> to the compiler's search paths.
+  -v                       Display the programs invoked by the compiler.
+  -###                     Like -v but options quoted and commands not executed.
+  -E                       Preprocess only; do not compile, assemble or link.
+  -S                       Compile only; do not assemble or link.
+  -c                       Compile and assemble, but do not link.
+  -o <file>                Place the output into <file>.
+```
+
+* 我们可以看到这些选项
+  gcc -E 仅预处理
+  gcc -S 仅编译或加上之前的预处理
+  gcc -c 仅汇编或加上在前的编译，预处理
+  gcc -o 输出目标到file
+
+### 预处理
+
+* 预处理可以简单理解为将源码中的宏和include替换为源码
+  gcc生产预处理后文件：
+
+  ```
+  gcc -E helloworld.c -o helloworld.i
+  ```
+
+### 编译
+
+* 编译器是将源代码编译成汇编语言
+  使用gcc编译输出汇编语言
+
+  ```
+  gcc -S helloworld.i -o helloworld.S //从预处理后文件生成汇编文件。
+  我们也可以直接用用源码生成汇编，命令会依次执行完预处理和编译
+  gcc -S helloworld.c -o helloworld.S 
+  ```
+
+### 汇编
+
+* 汇编器对汇编文件进行汇编生成目标文件。linux下称此目标为：可重定位目标文件
+
+```
+gcc -c helloworld.s -o helloworld.o
+或通过源码汇编
+gcc -c helloworld.c -o helloworld.o
+```
+
+* 目标文件无法直接分析，我们可以通过objdump命令来分析他
+
+  ```
+  objdump -sd helloworld.o
+  精选了下输出信息：
+
+  helloworld.o:     file format elf64-x86-64
+
+  Contents of section .rodata:
+   0000 48656c6c 6f20776f 726c6421 0d00      Hello world!..
+
+  Disassembly of section .text:
+
+  0000000000000000 <main>:
+     0:   f3 0f 1e fa             endbr64
+     4:   55                      push   %rbp
+     5:   48 89 e5                mov    %rsp,%rbp
+     8:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # f <main+0xf>
+     f:   e8 00 00 00 00          callq  14 <main+0x14>
+    14:   b8 00 00 00 00          mov    $0x0,%eax
+    19:   5d                      pop    %rbp
+    1a:   c3                      retq
+  ```
+
+  从汇编语言里可以看出这里的地址都是相对地址，比如汇编指令callq后面的地址并不是printf函数真正地址。需要链接后才会替换成真的地址
+
+### 链接
+
+* 链接就是把之前汇编出来个各个目标中有相互引用部分衔接起来，得到一个可执行的完整目标。链接过程主要包括了地址和空间分配、符号决议和重定向
+* 使用gccl链接
+
+  ```
+  gcc helloworld.o -o helloworld  //如果有多个.o，会把多个.o链接到一个目标
+  gcc默认使用的动态链接，如果要进行静态链接，需要加上-static选项
+  gcc helloworld.o -o helloworld -static
+  ```
+* 使用objdump分析目标
+
+  ```
+  objdump -sd helloworld
+  摘选精选部分信息
+  helloworld:     file format elf64-x86-64
+  0000000000001140 <frame_dummy>:
+      1140:       f3 0f 1e fa             endbr64
+      1144:       e9 77 ff ff ff          jmpq   10c0 <register_tm_clones>
+
+  0000000000001149 <main>:
+      1149:       f3 0f 1e fa             endbr64
+      114d:       55                      push   %rbp
+      114e:       48 89 e5                mov    %rsp,%rbp
+      1151:       48 8d 3d ac 0e 00 00    lea    0xeac(%rip),%rdi        # 2004 <_IO_stdin_used+0x4>
+      1158:       e8 f3 fe ff ff          callq  1050 <puts@plt>
+      115d:       b8 00 00 00 00          mov    $0x0,%eax
+      1162:       5d                      pop    %rbp
+      1163:       c3                      retq   
+      1164:       66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+      116b:       00 00 00
+      116e:       66 90                   xchg   %ax,%ax
+  ```
+  从main函数看，我们发现汇编过程中无法确定的符号地址信息在这里都被修改为实际的符号地址了。

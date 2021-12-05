@@ -1,10 +1,9 @@
 # 37ge docs
 
-A High-level Scorecard Modeling API   
-
-[![Downloads](https://pepy.tech/badge/scorecardbundle)](https://pepy.tech/project/scorecardbundle)  [![Downloads](https://img.shields.io/pypi/v/scorecardbundle?color=orange)](https://img.shields.io/pypi/v/scorecardbundle?color=orange)
-
+A High-level Scorecard Modeling API
 
 This documentation is organized as followed:
 
 - [算法](https://37ge.github.io/algorithm/)
+- [编译系统](https://37ge.github.io/compiler_principles/)
+  [GCC编译的工作原理](https://37ge.github.io/compiler_principles/GCC编译工作原理)
