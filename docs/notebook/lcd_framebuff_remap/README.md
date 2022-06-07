@@ -1,5 +1,5 @@
 ---
-sort: 3
+sort: 1
 ---
 # 一种LCD重映射framebuff的方法
 
