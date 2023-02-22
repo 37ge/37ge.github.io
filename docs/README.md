@@ -17,3 +17,4 @@ This documentation is organized as followed:
   - [信号量](https://37ge.github.io/RTOS/freertos/5.信号量.html)
   - [互斥量](https://37ge.github.io/RTOS/freertos/6.互斥量.html)
   - [事件组](https://37ge.github.io/RTOS/freertos/7.事件组.html)
+  - [任务通知](https://37ge.github.io/RTOS/freertos/8.任务通知.html)
