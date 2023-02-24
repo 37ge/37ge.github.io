@@ -18,3 +18,5 @@ This documentation is organized as followed:
   - [互斥量](https://37ge.github.io/RTOS/freertos/6.互斥量.html)
   - [事件组](https://37ge.github.io/RTOS/freertos/7.事件组.html)
   - [任务通知](https://37ge.github.io/RTOS/freertos/8.任务通知.html)
+  - [软件定时器](https://37ge.github.io/RTOS/freertos/9.软件定时器.html)
+  - [资源管理](https://37ge.github.io/RTOS/freertos/10.软件定时器.html)
